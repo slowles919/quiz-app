@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASEM Mülakat Quiz 2</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        #quiz-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 90%; max-width: 600px; }
+        #question { font-size: 1.2em; margin-bottom: 20px; }
+        #options { display: flex; flex-direction: column; gap: 10px; }
+        button { padding: 10px; font-size: 1em; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        #mnemonic { margin-top: 20px; font-style: italic; color: #555; display: none; }
+        #score { margin-top: 20px; font-weight: bold; }
+        #next-button { margin-top: 20px; display: none; }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <div id="question"></div>
+        <div id="options"></div>
+        <div id="mnemonic"></div>
+        <div id="score">Skor: 0</div>
+        <button id="next-button" onclick="loadNextQuestion()">Sonraki Soru</button>
+    </div>
+
+    <script>
+        const questions = [
+            { id: 1, question: "İstiklal Marşımızı TBMM'de ilk kim okumuştur?", correctAnswer: "Hamdullah Suphi Bey", incorrectAnswers: ["Mustafa Kemal Atatürk", "Ziya Gökalp", "Mehmet Akif Ersoy"], mnemonic: "Hamdullah Suphi, İstiklal’i mecliste ‘suphi’ bir şekilde okudu!" },
+            { id: 2, question: "Milli Mücadele dönemindeki kongrelerden hangisi ilk kez ulusal bağımsızlığın koşulsuz olarak gerçekleştirilmesine karar vermiştir?", correctAnswer: "Erzurum Kongresi", incorrectAnswers: ["Sivas Kongresi", "Amasya Genelgesi", "Havza Genelgesi"], mnemonic: "Erzurum’da ‘E’rken karar: Ulusal bağımsızlık!" },
+            { id: 3, question: "Atatürk ilkelerini sayarken cumhuriyetçilik ilkesini açıklayan tanım nedir?", correctAnswer: "Devlet yönetiminde cumhuriyetin bulunması", incorrectAnswers: ["Halkın birliğini sağlamak", "Laikliği benimsemek", "Milliyetçiliği yaymak"], mnemonic: "Cumhuriyetçilik, ‘C’umhurun yönetimde söz sahibi olmasıdır!" },
+            { id: 4, question: "Karlofça Antlaşması’nın Osmanlı Devleti için en önemli sonucu nedir?", correctAnswer: "Büyük ölçüde toprak kaybı", incorrectAnswers: ["Yükselme döneminin başlaması", "Avrupa’da ilerleyişin hızlanması", "Ekonomik güç kazanılması"], mnemonic: "Karlofça’da ‘K’ayıp büyük: Topraklar gitti!" },
+            { id: 5, question: "‘Ak koyundan her zaman ak koyun çıkmaz’ atasözü ne anlama gelir?", correctAnswer: "İyi ana-babadan kötü huylu çocuklar olabilir", incorrectAnswers: ["Herkes aynı huyu taşır", "Kötü insanlar her zaman kötü kalır", "İyi işler her zaman iyi sonuç vermez"], mnemonic: "Ak koyun ‘A’nlatsa da, bazen yavrusu siyah çıkar!" },
+            { id: 6, question: "Karadeniz bölgesindeki büyük şehirlerden hangisi diğerlerinden daha doğudadır?", correctAnswer: "Trabzon", incorrectAnswers: ["Samsun", "Ordu", "Giresun"], mnemonic: "Trabzon, Karadeniz’in ‘T’aa doğusunda!" },
+            { id: 7, question: "Osmanlı dönemindeki önemli fermanlardan biri olan Tanzimat Fermanı ne zaman ilan edilmiştir?", correctAnswer: "3 Kasım 1839", incorrectAnswers: ["18 Şubat 1856", "26 Ocak 1699", "7 Ağustos 1921"], mnemonic: "Tanzimat, 39’da ‘T’arihe damga vurdu!" },
+            { id: 8, question: "‘Huylu huyundan vazgeçmez’ deyimi neyi ifade eder?", correctAnswer: "Alışkanlıkları değiştirmek zordur", incorrectAnswers: ["Herkes huyunu değiştirir", "Huylar zamanla kaybolur", "İyi huylar her zaman kalır"], mnemonic: "Huy, ‘H’ayatta vazgeçilmez bir parça!" },
+            { id: 9, question: "I. Dünya Savaşı’nın en önemli sebebi nedir?", correctAnswer: "Fransız İhtilali’nin getirdiği milliyetçilik", incorrectAnswers: ["Ekonomik krizler", "Osmanlı’nın zayıflaması", "İngiltere’nin sömürge politikaları"], mnemonic: "I. Dünya’da ‘M’illiyetçilik savaş çıkardı!" },
+            { id: 10, question: "İç Anadolu Bölgesi’nin tarım ürünleri arasında en çok bilineni nedir?", correctAnswer: "Buğday", incorrectAnswers: ["Pamuk", "Zeytin", "Çay"], mnemonic: "İç Anadolu’da ‘B’uğday, tahıl ambarının kralı!" },
+            { id: 11, question: "‘Perşembenin gelişi çarşambadan belli olur’ sözü ne anlama gelir?", correctAnswer: "Bir olayın sonucu şimdiki gidişinden anlaşılır", incorrectAnswers: ["Herkes geleceği tahmin eder", "Plan yapmak gereksizdir", "Sonuçlar her zaman sürprizdir"], mnemonic: "Perşembe ‘P’lanı, Çarşamba’dan belli eder!" },
+            { id: 12, question: "Atatürk mareşal rütbesini hangi savaşta almıştır?", correctAnswer: "Sakarya Meydan Savaşı", incorrectAnswers: ["Büyük Taarruz", "Çanakkale Savaşı", "I. İnönü Savaşı"], mnemonic: "Sakarya’da ‘S’avaş kazandı, Mareşal oldu!" },
+            { id: 13, question: "Erzurum Kongresi’nde kim başkanlık yapmıştır?", correctAnswer: "Mustafa Kemal Paşa", incorrectAnswers: ["Hoca Raif Efendi", "Ziya Gökalp", "Hamdullah Suphi Bey"], mnemonic: "Erzurum’da ‘M’ustafa Kemal, başkanlık koltuğunda!" },
+            { id: 14, question: "Türkiye’nin en büyük yeraltı şehri nerede bulunur?", correctAnswer: "Derinkuyu, Kapadokya/Nevşehir", incorrectAnswers: ["Göreme, Nevşehir", "Kaymaklı, Nevşehir", "Ürgüp, Nevşehir"], mnemonic: "Derinkuyu, ‘D’erinlerdeki büyük şehir!" },
+            { id: 15, question: "‘Serçeden korkan mısı ekmez’ atasözü neyi anlatır?", correctAnswer: "Riskleri büyütmek başarıyı engeller", incorrectAnswers: ["Herkes risk almalı", "Korku her zaman kötüdür", "Risk almak gereksizdir"], mnemonic: "Serçe ‘S’ana korku verirse, mısır ekemezsin!" },
+            { id: 16, question: "İstanbul’un işgali sonrası ne oldu?", correctAnswer: "TBMM’nin açılışına zemin hazırlandı", incorrectAnswers: ["Osmanlı tamamen dağıldı", "İngilizler Anadolu’yu işgal etti", "Halk İstanbul’da direnişe geçti"], mnemonic: "İstanbul işgali, ‘T’BMM’ye yol açtı!" },
+            { id: 17, question: "Jandarmanın mülki görevleri arasında hangisi yer alır?", correctAnswer: "Emniyet ve asayişi sağlamak", incorrectAnswers: ["Savaşta orduya katılmak", "Vergi toplamak", "Yol yapımı"], mnemonic: "Jandarma ‘M’ülki görevde asayişin koruyucusu!" },
+            { id: 18, question: "Bekçi ve korucu hangi birime bağlıdır?", correctAnswer: "İçişleri Bakanlığı", incorrectAnswers: ["Milli Savunma Bakanlığı", "Adalet Bakanlığı", "Jandarma Genel Komutanlığı"], mnemonic: "Bekçi ‘B’akanlığa bağlı: İçişleri!" },
+            { id: 19, question: "I. Dünya Savaşı’nda Kafkas Cephesi’nde kimlerle savaştık?", correctAnswer: "Rus İmparatorluğu", incorrectAnswers: ["İngiltere", "Fransa", "Yunanistan"], mnemonic: "Kafkas’ta ‘R’uslarla çarpıştık!" },
+            { id: 20, question: "Kuva-yi Milliye düzenli birlik midir?", correctAnswer: "Hayır, düzenli olmayan silahlı birliklerdir", incorrectAnswers: ["Evet, düzenli ordudur", "Yarı düzenli bir ordudur", "Sadece yerel bir gruptur"], mnemonic: "Kuva-yi ‘M’illiye, düzenli değil, milli kuvvet!" },
+            { id: 21, question: "Tekalifi Milliye Emirleri ne zaman yayımlanmıştır?", correctAnswer: "7-8 Ağustos 1921", incorrectAnswers: ["12 Mart 1921", "30 Ekim 1918", "23 Temmuz 1919"], mnemonic: "Tekalifi ‘T’emmuz değil, Ağustos’ta yayımlandı!" },
+            { id: 22, question: "İstiklal Mahkemeleri ne amaçla kurulmuştur?", correctAnswer: "Ayaklanmaları ve bozgunculuğu yargılamak", incorrectAnswers: ["Ekonomik suçları cezalandırmak", "Vergi kaçaklarını yargılamak", "Sivil davalara bakmak"], mnemonic: "İstiklal ‘M’ahkemeleri, bozguncuları durdurdu!" },
+            { id: 23, question: "Atatürk’ün yaşamı boyunca yanında bulunan kişi kimdir?", correctAnswer: "Salih Bozok", incorrectAnswers: ["Ziya Gökalp", "Fevzi Çakmak", "İsmet İnönü"], mnemonic: "Salih ‘B’ozok, Atatürk’ün ‘B’iricik yoldaşı!" },
+            { id: 24, question: "‘Abanın kadri yağmurda bilinir’ sözü ne anlama gelir?", correctAnswer: "Bir şeyin değeri ihtiyaç anında anlaşılır", incorrectAnswers: ["Herkes yağmuru sever", "Değer her zaman bilinir", "Yağmurda her şey değersizdir"], mnemonic: "Abanın ‘A’nlattığı: Değer yağmurda ortaya çıkar!" },
+            { id: 25, question: "Ali Fuat Cebesoy’un Kurtuluş Savaşı’ndaki önemli katkısı nedir?", correctAnswer: "İngiliz birliklerini durdurması", incorrectAnswers: ["Lozan Antlaşması’nı imzalaması", "TBMM’yi kurması", "Sivas Kongresi’ni düzenlemesi"], mnemonic: "Ali Fuat, ‘İ’ngilizleri durdurdu, savaşı ‘F’ilen başlattı!" },
+            { id: 26, question: "II. Dünya Savaşı’nda Mihver Devletler hangileridir?", correctAnswer: "Almanya, Japonya, İtalya", incorrectAnswers: ["Fransa, İngiltere, ABD", "Rusya, Çin, İngiltere", "Yunanistan, Romanya, Portekiz"], mnemonic: "Mihver’de ‘A’lmanya, ‘J’aponya ve ‘İ’talya var!" },
+            { id: 27, question: "21 Haziran’da Kuzey Yarımküre’de ne olur?", correctAnswer: "Yılın en uzun günü yaşanır", incorrectAnswers: ["Yılın en kısa günü yaşanır", "Gündüz ve gece eşitlenir", "Kış başlar"], mnemonic: "21’de ‘K’uzeyde gün uzar, en uzun gün!" },
+            { id: 28, question: "Mondros Ateşkes Antlaşması ne zaman imzalanmıştır?", correctAnswer: "30 Ekim 1918", incorrectAnswers: ["24 Temmuz 1923", "17 Mayıs 1639", "26 Ocak 1699"], mnemonic: "Mondros ‘M’ütarekesi, 18’de ‘O’ktober’de imzalandı!" },
+            { id: 29, question: "Jandarma Kriminal’in temel amacı nedir?", correctAnswer: "Adli ve idari makamlara yardımcı olmak", incorrectAnswers: ["Savaşta orduya destek olmak", "Vergi toplamak", "Yol güvenliği sağlamak"], mnemonic: "Jandarma ‘K’riminal, adli makamlara ‘K’olaylık sağlar!" },
+            { id: 30, question: "‘Aşağı tükürsem sakal yukarı tükürsem bıyık’ deyimi neyi ifade eder?", correctAnswer: "İki karşıt davranış arasında karar verememe", incorrectAnswers: ["Her zaman doğru karar verilir", "Karar vermek kolaydır", "Herkes bir seçim yapar"], mnemonic: "Aşağı ‘A’cı, yukarı ‘B’acı: Karar zor!" },
+            { id: 31, question: "‘Can çıkar huy çıkmaz’ atasözü ne anlama gelir?", correctAnswer: "Huy değişmez, ölünceye kadar sürer", incorrectAnswers: ["Huy her zaman değişir", "Herkes huyunu gizler", "Huy zamanla kaybolur"], mnemonic: "Can ‘C’ıkar, ama huy ‘Ç’ıkmaz!" },
+            { id: 32, question: "Kasr-ı Şirin Antlaşması hangi sınırı belirlemiştir?", correctAnswer: "Türkiye-İran sınırı", incorrectAnswers: ["Türkiye-Irak sınırı", "Türkiye-Yunanistan sınırı", "Türkiye-Suriye sınırı"], mnemonic: "Kasr-ı Şirin, ‘İ’ran’la sınırı ‘Ş’ekillendirdi!" },
+            { id: 33, question: "Halifeliğin kaldırılmasının temel sebebi nedir?", correctAnswer: "Laik düzene geçişi engellemesi", incorrectAnswers: ["Ekonomik sorunlar", "Halkın isteği", "Savaş sonrası kayıplar"], mnemonic: "Halifelik ‘H’ayır değil, laikliğe engel!" },
+            { id: 34, question: "Türkiye Cumhuriyeti’nin ilk özel bankası hangisidir?", correctAnswer: "Türkiye İş Bankası", incorrectAnswers: ["Garanti Bankası", "Yapı Kredi Bankası", "Akbank"], mnemonic: "İlk özel banka ‘İ’ş Bankası, ‘T’arihe geçti!" },
+            { id: 35, question: "Batı Avrupa ülkelerinden Avusturya’nın başkenti nedir?", correctAnswer: "Viyana", incorrectAnswers: ["Berlin", "Paris", "Amsterdam"], mnemonic: "Avusturya’da ‘V’iyana, valsin başkenti!" },
+            { id: 36, question: "Lozan Antlaşması ile ne kaldırılmıştır?", correctAnswer: "Kapitülasyonlar", incorrectAnswers: ["Halifelik", "Saltanat", "Monarşi"], mnemonic: "Lozan’da ‘K’apitülasyonlar ‘L’isten atıldı!" },
+            { id: 37, question: "Seküler devlet nedir?", correctAnswer: "Resmi bir dini olmayan devlet", incorrectAnswers: ["Dini kurallarla yönetilen devlet", "Monarşiyle yönetilen devlet", "Savaşta tarafsız devlet"], mnemonic: "Seküler ‘S’istem, dini ‘S’ız yönetir!" },
+            { id: 38, question: "Büyük Taarruz’un en önemli sonucu nedir?", correctAnswer: "Yunan ordusunun imha edilmesi", incorrectAnswers: ["Osmanlı’nın yeniden kurulması", "İngilizlerin Anadolu’dan çekilmesi", "TBMM’nin kapanması"], mnemonic: "Büyük ‘T’aarruz, Yunanı ‘T’opraklardan attı!" },
+            { id: 39, question: "Osmanlı Devleti’nde azınlıklara ve Müslümanlara aynı hakları veren ferman hangisidir?", correctAnswer: "Islahat Fermanı", incorrectAnswers: ["Tanzimat Fermanı", "Karlofça Antlaşması", "Mondros Antlaşması"], mnemonic: "Islahat ‘İ’le azınlık ve Müslüman ‘İ’nsanlar eşitlendi!" },
+            { id: 40, question: "Osmanlı Devleti’nin son padişahı kimdir?", correctAnswer: "Sultan Vahdettin", incorrectAnswers: ["Sultan Abdülmecit", "Sultan Abdülhamit", "Sultan Mehmet"], mnemonic: "Son padişah ‘V’ahdettin, ‘S’altanatı bitirdi!" },
+            { id: 41, question: "Osmanlı Devleti’ne halifelik hangi padişah döneminde geçti?", correctAnswer: "Yavuz Sultan Selim", incorrectAnswers: ["Fatih Sultan Mehmet", "Kanuni Sultan Süleyman", "I. Ahmet"], mnemonic: "Yavuz ‘S’elim, halifeliği ‘S’elim’e aldı!" },
+            { id: 42, question: "Türklerin İstanbul’u almasının en önemli sonucu nedir?", correctAnswer: "Osmanlı’nın imparatorluk seviyesine yükselmesi", incorrectAnswers: ["Avrupa’da gerileme dönemi", "Osmanlı’nın dağılması", "Ekonomik kriz"], mnemonic: "İstanbul ‘İ’mparatorluk yolunda ‘S’anca yükseldi!" },
+            { id: 43, question: "Kanuni döneminde Fransa’ya kapitülasyon verilmesinin temel sebebi nedir?", correctAnswer: "Hıristiyan birliğini bölmek", incorrectAnswers: ["Ekonomik kazanç sağlamak", "Fransa’yı işgal etmek", "Savaşta destek almak"], mnemonic: "Kanuni ‘K’apitülasyonla Hıristiyan birliğini ‘K’ırdı!" },
+            { id: 44, question: "Kapitülasyonlar ne zaman kaldırılmıştır?", correctAnswer: "Lozan Antlaşması, 24 Temmuz 1923", incorrectAnswers: ["Mondros Antlaşması, 1918", "Karlofça Antlaşması, 1699", "Kasr-ı Şirin Antlaşması, 1639"], mnemonic: "Kapitülasyon ‘K’aldırıldı, Lozan’da ‘T’arih yazıldı!" },
+            { id: 45, question: "Misak-ı Milli nedir?", correctAnswer: "Türk Kurtuluş Savaşı’nın siyasi manifestosu", incorrectAnswers: ["Osmanlı’nın son antlaşması", "TBMM’nin kapanış bildirgesi", "Halifeliğin kaldırılması"], mnemonic: "Misak-ı ‘M’illi, kurtuluşun ‘M’anifestosu!" },
+            { id: 46, question: "‘Güneş balçıkla sıvanmaz’ atasözü neyi ifade eder?", correctAnswer: "Açık bir durumu saklamak mümkün değildir", incorrectAnswers: ["Herkes gerçeği gizler", "Gerçek her zaman saklanır", "Güneş her zaman parlaktır"], mnemonic: "Güneş ‘G’erçeği, balçıkla ‘S’aklanamaz!" },
+            { id: 47, question: "‘Sarımsağı gelin yapmışlar 40 gün kokusu çıkmış’ atasözü ne anlama gelir?", correctAnswer: "Kötü huylu kimselerin foyası zamanla ortaya çıkar", incorrectAnswers: ["Herkes kötü huyunu saklar", "Kötü huylar hemen fark edilir", "Zaman her şeyi çözer"], mnemonic: "Sarımsak ‘S’aklanamaz, 40’ta kokusu çıkar!" },
+            { id: 48, question: "Tanzimat Fermanı ne zaman ilan edilmiştir?", correctAnswer: "3 Kasım 1839", incorrectAnswers: ["18 Şubat 1856", "7 Ağustos 1921", "24 Temmuz 1923"], mnemonic: "Tanzimat ‘T’arihi: 39’da ‘N’aber oldu!" },
+            { id: 49, question: "Islahat Fermanı’nın temel amacı nedir?", correctAnswer: "Gayrimüslimlere haklar vererek devleti birleştirmek", incorrectAnswers: ["Ekonomik reform yapmak", "Savaşta destek almak", "Halkı eğitmek"], mnemonic: "Islahat ‘İ’le gayrimüslimler ‘İ’nsan gibi eşitlendi!" },
+            { id: 50, question: "Osmanlı Devleti’nde kardeş katlini kaldıran padişah kimdir?", correctAnswer: "I. Ahmet", incorrectAnswers: ["Yavuz Sultan Selim", "Kanuni Sultan Süleyman", "Fatih Sultan Mehmet"], mnemonic: "I. Ahmet ‘A’kıllıca kardeş katlini ‘A’kıldırdı!" },
+            { id: 51, question: "İttihat ve Terakki Cemiyeti’ni kimler kurmuştur?", correctAnswer: "İbrahim Temo, Abdullah Cevdet, İshak Süküti, Mehmed Reşid", incorrectAnswers: ["Ziya Gökalp, Namık Kemal", "Mustafa Kemal, Ali Fuat Cebesoy", "Hamdullah Suphi, Fevzi Çakmak"], mnemonic: "İttihat’ta ‘İ’brahim ve ‘T’emo önder oldu!" },
+            { id: 52, question: "İstiklal Madalyası alan ilk şehir hangisidir?", correctAnswer: "Kahramanmaraş", incorrectAnswers: ["Ankara", "İzmir", "Bursa"], mnemonic: "Kahramanmaraş ‘K’azandı, ilk madalya ‘M’araş’a!" },
+            { id: 53, question: "Atatürk’ün fikir babası kimdir?", correctAnswer: "Ziya Gökalp", incorrectAnswers: ["Namık Kemal", "Mehmet Akif Ersoy", "Fevzi Çakmak"], mnemonic: "Ziya ‘G’ökalp, Atatürk’ün ‘G’örüş babası!" },
+            { id: 54, question: "Türkiye’yi etkileyen iklimlerden biri olan Karasal İklim hangi bölgede baskındır?", correctAnswer: "İç Anadolu Bölgesi", incorrectAnswers: ["Karadeniz Bölgesi", "Akdeniz Bölgesi", "Ege Bölgesi"], mnemonic: "Karasal ‘K’lim, İç Anadolu’da ‘K’raldır!" },
+            { id: 55, question: "Türkiye’yi etkileyen rüzgarlardan Poyraz’ın özelliği nedir?", correctAnswer: "Kuzeydoğudan eser, soğuk getirir", incorrectAnswers: ["Güneyden eser, sıcak getirir", "Batıdan eser, yağmur getirir", "Doğudan eser, fırtına yapar"], mnemonic: "Poyraz ‘P’olar soğuğu getirir, kuzeydoğudan!" },
+            { id: 56, question: "Hocalı Soykırımı ne zaman gerçekleşmiştir?", correctAnswer: "26 Şubat 1992", incorrectAnswers: ["27 Eylül 2020", "25 Aralık 1991", "3 Mart 1924"], mnemonic: "Hocalı ‘H’azini, 92’de ‘Ş’ubatta yaşandı!" },
+            { id: 57, question: "Karabağ Savaşı’nda Şuşa’yı kim ele geçirmiştir?", correctAnswer: "Azerbaycan", incorrectAnswers: ["Ermenistan", "Rusya", "Türkiye"], mnemonic: "Şuşa’yı ‘Ş’ampiyon Azerbaycan aldı!" },
+            { id: 58, question: "Atatürk’ün yazdığı kitaplardan biri olan Nutuk ne zaman yayımlanmıştır?", correctAnswer: "1927", incorrectAnswers: ["1918", "1930", "1937"], mnemonic: "Nutuk ‘N’asırlık bir eser, 27’de yayımlandı!" },
+            { id: 59, question: "Milli Edebiyat dönemi yazarlarından biri kimdir?", correctAnswer: "Ömer Seyfettin", incorrectAnswers: ["Ahmet Hamdi Tanpınar", "Peyami Safa", "Yahya Kemal Beyatlı"], mnemonic: "Milli Edebiyat’ta ‘Ö’mer ‘S’eyfettin öne çıkar!" },
+            { id: 60, question: "‘Herkes ektiğini biçer’ atasözü ne anlama gelir?", correctAnswer: "Ne şekilde davranırsan o şekilde karşılık görürsün", incorrectAnswers: ["Herkes çalışırsa kazanır", "Ekilen her şey büyür", "Herkes aynı kaderi yaşar"], mnemonic: "Herkes ‘H’areketine göre ‘B’içer!" },
+            { id: 61, question: "Kolluk kuvvetlerinden biri olan Jandarma hangi bakanlığa bağlıdır?", correctAnswer: "İçişleri Bakanlığı", incorrectAnswers: ["Milli Savunma Bakanlığı", "Adalet Bakanlığı", "Milli Eğitim Bakanlığı"], mnemonic: "Jandarma ‘İ’çişleri’nde ‘J’andarma gibi çalışır!" },
+            { id: 62, question: "Türkiye’nin Suriye’de yaptığı operasyonlardan biri hangisidir?", correctAnswer: "Zeytin Dalı Harekatı", incorrectAnswers: ["Kafkas Operasyonu", "İnönü Harekatı", "Sakarya Operasyonu"], mnemonic: "Zeytin ‘D’alı, Suriye’de ‘Z’afere uzandı!" },
+            { id: 63, question: "Fırat Nehri üzerindeki barajlardan biri hangisidir?", correctAnswer: "Atatürk Barajı", incorrectAnswers: ["Sarıyar Barajı", "Demirköprü Barajı", "Hirfanlı Barajı"], mnemonic: "Fırat’ta ‘A’tatürk Barajı ‘A’kıyor!" },
+            { id: 64, question: "‘Rüzgar eken fırtına biçer’ atasözü neyi ifade eder?", correctAnswer: "Zarar veren sert tepki alır", incorrectAnswers: ["Herkes rüzgarı sever", "Fırtına her zaman olur", "Rüzgar çalışmayı getirir"], mnemonic: "Rüzgar ‘R’ahatsız ederse, fırtına ‘F’elaket getirir!" },
+            { id: 65, question: "Yenilenebilir enerji kaynaklarından biri hangisidir?", correctAnswer: "Güneş enerjisi", incorrectAnswers: ["Petrol", "Doğalgaz", "Kömür"], mnemonic: "Güneş ‘G’ibi yenilenebilir, enerji ‘G’etirir!" },
+            { id: 66, question: "Atatürk Orman Çiftliği ne zaman kurulmuştur?", correctAnswer: "1925", incorrectAnswers: ["1930", "1919", "1940"], mnemonic: "Atatürk ‘A’razide çiftlik kurdu, 25’te!" },
+            { id: 67, question: "‘Kör bile düştüğü çukura bir daha düşmez’ atasözü ne anlama gelir?", correctAnswer: "İnsan hatalarından ders alır", incorrectAnswers: ["Herkes hata yapar", "Hatalar unutulur", "Hata yapmak kaçınılmazdır"], mnemonic: "Kör ‘K’endi çukuruna ‘B’ir daha düşmez!" },
+            { id: 68, question: "Türkiye’nin en büyük tatlı su gölü hangisidir?", correctAnswer: "Beyşehir Gölü", incorrectAnswers: ["Van Gölü", "Tuz Gölü", "Eğirdir Gölü"], mnemonic: "Beyşehir ‘B’üyük, tatlı suyun ‘B’irincisi!" },
+            { id: 69, question: "‘Geçti Bor’un pazarı sür eşeğini Niğde’ye’ atasözü neyi ifade eder?", correctAnswer: "Fırsatı kaçırdın, yeni fırsat ara", incorrectAnswers: ["Herkes Niğde’ye gider", "Fırsat her zaman gelir", "Pazar her zaman açıktır"], mnemonic: "Bor’un ‘B’itti, Niğde’ye ‘G’it!" },
+            { id: 70, question: "‘Ava gelmez kuş olmaz, başa gelmez iş olmaz’ atasözü ne anlama gelir?", correctAnswer: "Herkes felaketle karşılaşabilir", incorrectAnswers: ["Herkes avlanır", "Felaketler önlenir", "Kuşlar her zaman avlanır"], mnemonic: "Ava ‘A’nlattık: Başa iş gelir!" },
+            { id: 71, question: "Egemenlik türlerinden biri olan demokrasi neyi ifade eder?", correctAnswer: "Halkın kendi kendini yönetmesi", incorrectAnswers: ["Bir kişinin yönetimi", "Dini kurallarla yönetim", "Askeri yönetim"], mnemonic: "Demokrasi ‘D’irekt halkın ‘M’üdafaası!" },
+            { id: 72, question: "II. Dünya Savaşı’nın sonuçlarından biri nedir?", correctAnswer: "Birleşmiş Milletler kuruldu", incorrectAnswers: ["Osmanlı yeniden kuruldu", "TBMM kapandı", "Kapitülasyonlar geri geldi"], mnemonic: "II. Dünya ‘B’itti, ‘B’M kuruldu!" },
+            { id: 73, question: "II. Dünya Savaşı’nın Türkiye açısından sonuçlarından biri nedir?", correctAnswer: "Varlık vergisi getirildi", incorrectAnswers: ["Halifelik kaldırıldı", "Lozan Antlaşması imzalandı", "TBMM açıldı"], mnemonic: "II. Dünya’da ‘V’arlık vergisi ‘V’ardı!" },
+            { id: 74, question: "Haçlı Seferleri’nin dini sebeplerinden biri nedir?", correctAnswer: "Kudüs’ü Müslümanlardan almak", incorrectAnswers: ["Ekonomik kazanç sağlamak", "Avrupa’da birliği sağlamak", "Osmanlı’yı güçlendirmek"], mnemonic: "Haçlılar ‘H’edefledi: Kudüs’ü ‘A’lmak!" },
+            { id: 75, question: "Yaprak Dökümü kitabının yazarı kimdir?", correctAnswer: "Reşat Nuri Güntekin", incorrectAnswers: ["Halide Edip Adıvar", "Ömer Seyfettin", "Ziya Gökalp"], mnemonic: "Yaprak ‘Y’azar: Reşat ‘N’uri!" },
+            { id: 76, question: "I. Dünya Savaşı cephelerinden biri hangisidir?", correctAnswer: "Çanakkale Cephesi", incorrectAnswers: ["Sakarya Cephesi", "Büyük Taarruz", "İnönü Cephesi"], mnemonic: "Çanakkale ‘Ç’ok önemli bir ‘C’ephe!" },
+            { id: 77, question: "‘Ateş olmayan yerden duman çıkmaz’ atasözü neyi ifade eder?", correctAnswer: "Bir olayın belirtisi varsa olay vardır", incorrectAnswers: ["Herkes dumanı görür", "Ateş her zaman çıkar", "Duman her zaman yalandır"], mnemonic: "Ateş ‘A’nlattı: Duman varsa olay var!" },
+            { id: 78, question: "İnanç turizmi nedir?", correctAnswer: "Dini inançlar için çekim merkezlerine ziyaret", incorrectAnswers: ["Spor için yapılan geziler", "Ekonomik kazanç için yapılan geziler", "Eğitim için yapılan geziler"], mnemonic: "İnanç ‘İ’çin gez, turizm ‘İ’lahi olur!" },
+            { id: 79, question: "Osmanlı Devleti’nde şeri vergilerden biri olan öşür vergisi kimlerden alınır?", correctAnswer: "Müslüman çiftçilerden", incorrectAnswers: ["Gayrimüslimlerden", "Askerlerden", "Tüccarlardan"], mnemonic: "Öşür ‘Ö’zel, Müslüman çiftçiye ‘Ş’art!" },
+            { id: 80, question: "Anayasa Mahkemesi’nin temel görevi nedir?", correctAnswer: "Kanunların anayasaya uygunluğunu denetlemek", incorrectAnswers: ["Vergi toplamak", "Savaşta orduyu yönetmek", "Eğitim sistemini düzenlemek"], mnemonic: "Anayasa ‘A’nlattı: Denetim ‘M’ahkemede!" },
+            { id: 81, question: "‘İnceldiği yerden kopmak’ deyimi neyi ifade eder?", correctAnswer: "Sonuç ne olursa olsun önemli değil", incorrectAnswers: ["Her zaman kopar", "Sonuç her zaman iyidir", "Kopmak kaçınılmazdır"], mnemonic: "İnceldi ‘İ’stedi, kopmak ‘İ’stedi!" },
+            { id: 82, question: "Yüce Divan nedir?", correctAnswer: "Yüksek görevlileri yargılayan mahkeme", incorrectAnswers: ["Vergi mahkemesi", "Eğitim mahkemesi", "Sivil mahkeme"], mnemonic: "Yüce ‘Y’argılar, ‘D’ivan’da yüksekleri!" },
+            { id: 83, question: "Devlet Denetleme Kurulu’nun görevi nedir?", correctAnswer: "Yönetimin hukuka uygunluğunu denetlemek", incorrectAnswers: ["Savaşta orduyu yönetmek", "Eğitim sistemini düzenlemek", "Vergi toplamak"], mnemonic: "Devlet ‘D’enetler, ‘K’urul hukuka bakar!" },
+            { id: 84, question: "Düzenleyici ve denetleyici kurumlardan biri hangisidir?", correctAnswer: "Bankacılık Düzenleme ve Denetleme Kurumu", incorrectAnswers: ["Milli Eğitim Bakanlığı", "Sağlık Bakanlığı", "Adalet Bakanlığı"], mnemonic: "BDDK ‘B’ankaları ‘D’üzenler!" },
+            { id: 85, question: "Atlas ve Hint Okyanusu’nu birleştiren kanal hangisidir?", correctAnswer: "Panama Kanalı", incorrectAnswers: ["Süveyş Kanalı", "Kiel Kanalı", "Korint Kanalı"], mnemonic: "Panama ‘P’ortalı, okyanusları ‘A’çtı!" },
+            { id: 86, question: "Atatürk’ün naaşı Anıtkabir’den önce nerede saklanmıştır?", correctAnswer: "Ankara Etnografya Müzesi", incorrectAnswers: ["Topkapı Sarayı", "Dolmabahçe Sarayı", "Çankaya Köşkü"], mnemonic: "Ankara’da ‘E’tnografya, naaşı ‘M’üzede sakladı!" },
+            { id: 87, question: "‘Her yiğidin yoğurt yiyişi farklıdır’ atasözü ne anlama gelir?", correctAnswer: "Herkesin yetenekleri farklıdır", incorrectAnswers: ["Herkes aynıdır", "Yoğurt yemek zordur", "Herkes aynı şeyi yapar"], mnemonic: "Her ‘Y’iğit, yoğurdu ‘F’arklı yer!" },
+            { id: 88, question: "‘Keskin sirke küpüne zarardır’ atasözü neyi ifade eder?", correctAnswer: "Öfke insana zarar verir", incorrectAnswers: ["Sirke her zaman iyidir", "Öfke her zaman kazandırır", "Küp her zaman kırılır"], mnemonic: "Keskin ‘K’ızgınlık, küpüne ‘Z’arar verir!" },
+            { id: 89, question: "Ahi teşkilatının temel amacı nedir?", correctAnswer: "Türk zanaatkarları ayakta tutmak", incorrectAnswers: ["Savaşta orduya destek olmak", "Vergi toplamak", "Eğitim vermek"], mnemonic: "Ahi ‘A’nadolu’da zanaatkarları ‘H’ayatta tuttu!" },
+            { id: 90, question: "Sütçü İmam kimdir?", correctAnswer: "Maraş kurtuluş mücadelesini başlatan direnişçi", incorrectAnswers: ["Osmanlı padişahı", "TBMM başkanı", "Jandarma komutanı"], mnemonic: "Sütçü ‘S’avaşçı, Maraş’ta ‘İ’mam gibi direndi!" },
+            { id: 91, question: "Dünyanın 7 harikasından biri olan Artemis Tapınağı nerede bulunur?", correctAnswer: "Türkiye", incorrectAnswers: ["Mısır", "Yunanistan", "Irak"], mnemonic: "Artemis ‘A’ntik tapınağı, Türkiye’de ‘M’utlu!" },
+            { id: 92, question: "‘Kuru gayret çarık eskitir’ atasözü ne anlama gelir?", correctAnswer: "Plansız çaba boşa gider", incorrectAnswers: ["Herkes gayretlidir", "Çaba her zaman kazandırır", "Plansız çalışmak iyidir"], mnemonic: "Kuru ‘G’ayret, çarığı ‘K’ırar!" },
+            { id: 93, question: "Sosyal devletin temel özelliği nedir?", correctAnswer: "Bireylere asgari gelir güvencesi vermek", incorrectAnswers: ["Savaşta tarafsız kalmak", "Dini kurallarla yönetmek", "Ekonomik büyümeyi durdurmak"], mnemonic: "Sosyal ‘S’istem, geliri ‘S’ağlar!" },
+            { id: 94, question: "‘Balık baştan kokar’ atasözü neyi ifade eder?", correctAnswer: "Aksaklık başta olanlardan kaynaklanır", incorrectAnswers: ["Herkes balık sever", "Aksaklık her zaman olur", "Baştakiler her zaman iyidir"], mnemonic: "Balık ‘B’aştan, aksaklık ‘B’aşta!" },
+            { id: 95, question: "‘Akıl yaşta değil baştadır’ atasözü ne anlama gelir?", correctAnswer: "Mantıklı olmak yaşla ilgili değildir", incorrectAnswers: ["Herkes yaşlandıkça akıllanır", "Akıl her zaman yaşlıdadır", "Yaşlılar her zaman akılsızdır"], mnemonic: "Akıl ‘A’nlattı: Başta, yaşta değil!" },
+            { id: 96, question: "‘Aç tokun gözüne bakarak doymaz’ atasözü neyi ifade eder?", correctAnswer: "Çalışmadan bir şey elde edilmez", incorrectAnswers: ["Herkes tok olur", "Bakmak her zaman yeter", "Açlık her zaman geçer"], mnemonic: "Aç ‘A’nlattı: Bakmakla ‘D’oyulmaz!" },
+            { id: 97, question: "‘Akan su yosun tutmaz’ deyimi ne anlama gelir?", correctAnswer: "Çalışan insan tembelliğe kapılmaz", incorrectAnswers: ["Su her zaman yosun tutar", "Herkes tembeldir", "Çalışmak gereksizdir"], mnemonic: "Akan ‘A’ktif su, yosun ‘T’utmaz!" },
+            { id: 98, question: "S.S.C.B ne zaman dağılmıştır?", correctAnswer: "25 Aralık 1991", incorrectAnswers: ["26 Şubat 1992", "27 Eylül 2020", "3 Mart 1924"], mnemonic: "S.S.C.B ‘S’ona erdi, 91’de ‘D’eğişti!" },
+            { id: 99, question: "Hürkuş nedir?", correctAnswer: "TUSAŞ tarafından geliştirilen eğitim uçağı", incorrectAnswers: ["Osmanlı gemisi", "Jandarma birliği", "TBMM binası"], mnemonic: "Hürkuş ‘H’avada, TUSAŞ’ın ‘K’anadı!" },
+            { id: 100, question: "Temsil Heyeti ilk olarak hangi kongrede oluşturulmuştur?", correctAnswer: "Erzurum Kongresi", incorrectAnswers: ["Sivas Kongresi", "Amasya Genelgesi", "Havza Genelgesi"], mnemonic: "Temsil ‘T’oplantısı, Erzurum’da ‘H’eyet oldu!" }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let wrongQuestions = [];
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const mnemonicElement = document.getElementById('mnemonic');
+        const scoreElement = document.getElementById('score');
+        const nextButton = document.getElementById('next-button');
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length && wrongQuestions.length === 0) {
+                questionElement.textContent = "Quiz bitti! Skorunuz: " + score + "/" + questions.length;
+                optionsElement.innerHTML = "";
+                mnemonicElement.style.display = "none";
+                nextButton.style.display = "none";
+                return;
+            }
+
+            if (currentQuestionIndex >= questions.length && wrongQuestions.length > 0) {
+                questions.push(...wrongQuestions);
+                wrongQuestions = [];
+                shuffle(questions);
+                currentQuestionIndex = 0;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            questionElement.textContent = currentQuestion.question;
+            mnemonicElement.textContent = "Hafıza Tekniği: " + currentQuestion.mnemonic;
+            mnemonicElement.style.display = "none";
+            nextButton.style.display = "none";
+
+            const allOptions = [currentQuestion.correctAnswer, ...currentQuestion.incorrectAnswers];
+            shuffle(allOptions);
+
+            optionsElement.innerHTML = "";
+            allOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, currentQuestion.correctAnswer));
+                optionsElement.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedOption, correctAnswer) {
+            const buttons = optionsElement.getElementsByTagName('button');
+            for (let button of buttons) {
+                button.disabled = true;
+                if (button.textContent === correctAnswer) {
+                    button.style.backgroundColor = '#4CAF50';
+                } else if (button.textContent === selectedOption) {
+                    button.style.backgroundColor = '#f44336';
+                }
+            }
+
+            if (selectedOption === correctAnswer) {
+                score++;
+                scoreElement.textContent = "Skor: " + score;
+            } else {
+                wrongQuestions.push(questions[currentQuestionIndex]);
+            }
+
+            mnemonicElement.style.display = "block";
+            nextButton.style.display = "block";
+        }
+
+        function loadNextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
